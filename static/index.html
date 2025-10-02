@@ -107,3 +107,133 @@ def signup_for_activity(activity_name: str, email: str):
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mergington High School Activities</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      padding: 1em 0;
+    }
+    /* ...existing styles... */
+    .activity-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5em;
+      margin-bottom: 1.5em;
+      background: #fafbfc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      max-width: 400px;
+    }
+    .activity-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
+      color: #2d3a4a;
+    }
+    .activity-description {
+      margin-bottom: 0.5em;
+      color: #444;
+    }
+    .activity-schedule {
+      font-style: italic;
+      margin-bottom: 0.5em;
+      color: #666;
+    }
+    .participants-section {
+      margin-top: 1em;
+      background: #f0f4f8;
+      border-radius: 6px;
+      padding: 0.75em;
+    }
+    .participants-title {
+      font-size: 1em;
+      font-weight: 500;
+      margin-bottom: 0.3em;
+      color: #1a2b3c;
+    }
+    .participants-list {
+      margin: 0;
+      padding-left: 1.2em;
+      color: #2d3a4a;
+    }
+    /* ...existing styles... */
+  </style>
+</head>
+<body>
+  <h1>Extracurricular Activities at Mergington High School</h1>
+  <div id="activities"></div>
+  <script>
+    async function fetchActivities() {
+      const response = await fetch('/activities');
+      return response.json();
+    }
+
+    function renderActivities(activities) {
+      const container = document.getElementById('activities');
+      container.innerHTML = '';
+      Object.entries(activities).forEach(([name, info]) => {
+        const card = document.createElement('div');
+        card.className = 'activity-card';
+
+        card.innerHTML = `
+          <div class="activity-title">${name}</div>
+          <div class="activity-description">${info.description}</div>
+          <div class="activity-schedule">${info.schedule}</div>
+          <div><strong>Max Participants:</strong> ${info.max_participants}</div>
+          <div class="participants-section">
+            <div class="participants-title">Participants:</div>
+            <ul class="participants-list">
+              ${info.participants.map(email => `<li>${email}</li>`).join('')}
+            </ul>
+          </div>
+          <form class="signup-form" onsubmit="signupForActivity(event, '${name}')">
+            <input type="email" name="email" placeholder="Your email" required>
+            <button type="submit">Sign Up</button>
+          </form>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function signupForActivity(event, activityName) {
+      event.preventDefault();
+      const form = event.target;
+      const email = form.email.value;
+
+      const response = await fetch(`/activities/${activityName}/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        alert('Signed up successfully!');
+        const activities = await fetchActivities();
+        renderActivities(activities);
+      } else {
+        const error = await response.json();
+        alert(`Error: ${error.detail}`);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const activities = await fetchActivities();
+      renderActivities(activities);
+    });
+  </script>
+</body>
+</html>
